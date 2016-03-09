@@ -16,7 +16,7 @@ import android.widget.LinearLayout;
  * <b>描述</b>：　　　<br>
  * <b>版本</b>：　    V1.0 <br>
  * <b>修订历史</b>：　<br/>
- * <p/>
+ * <p>
  * 1. RefreshLayout布局内只能允许有一个孩子
  * ========================================================== <br>
  */
@@ -40,18 +40,15 @@ public class RefreshLayout extends LinearLayout {
         if (getChildCount() > 1) {
             throw new RuntimeException("RefreshLayout View is only one child");
         }
+        initRefreshView();
     }
 
-    @Override
-    protected void onFinishInflate() {
-        super.onFinishInflate();
-        View view = null;
-        ViewGroup vp = (ViewGroup) getChildAt(1);
-        if (vp instanceof AbsListView || vp instanceof RecyclerView) {
-            view = vp;
-        }
-        if (view == null) {
-            view = getRefreshView(vp);
+    private void initRefreshView() {
+        View view = getChildAt(0);
+        if (view instanceof AbsListView || view instanceof RecyclerView) {
+            mRefreshView = view;
+        } else if (view instanceof ViewGroup) {
+            view = getRefreshView((ViewGroup) view);
         }
         if (view == null) {
             throw new IllegalArgumentException("No can scroll View");

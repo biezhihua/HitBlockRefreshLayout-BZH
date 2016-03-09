@@ -12,6 +12,7 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -26,9 +27,7 @@ import android.widget.TextView;
  * <b>修订历史</b>：　<br/>
  * ========================================================== <br>
  */
-public class RefreshHeaderView extends FrameLayout {
-
-    private int mRefreshViewHeight;
+public class RefreshHeaderView extends FrameLayout implements ViewTreeObserver.OnGlobalLayoutListener {
 
     private static final long OPENING_ANIM_DURATION = 500;
     private RelativeLayout mMaskShadowLayout;     // 灰色背景
@@ -38,56 +37,42 @@ public class RefreshHeaderView extends FrameLayout {
     private TextView mBottomMaskView;
     private int mHalfCurtainHeight;
     private AnimatorSet mStartOpeningAnim;
+    private HitBlockView mHitBlockView;
 
     public RefreshHeaderView(Context context, AttributeSet attrs) {
         super(context, attrs);
 
-        if (attrs != null) {
-            TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.RefreshLayout, 0, 0);
-            mRefreshViewHeight = (int) a.getDimension(R.styleable.RefreshLayout_RefreshViewHeight, d2x(RefreshLayout.DEFAULT_REFRESH_VIEW_HEIGHT));
-            a.recycle();
-        }
-
-        LayoutParams lp = new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, mRefreshViewHeight);
-        setLayoutParams(lp);
-
-        initMainLayout(context);
+        initMainLayout(context, attrs);
 
         initCurtain(context);
+
+        getViewTreeObserver().addOnGlobalLayoutListener(this);
     }
 
     /**
      * 1. 初始化上下窗帘
-     * 2. 计算单个窗帘的高度
-     * 3. 初始化窗帘并加入到布局中
      */
     private void initCurtain(Context context) {
-
         mTopMaskView = getMaskTextView(context, "Pull to Break Out!", 20, Gravity.BOTTOM);
         mBottomMaskView = getMaskTextView(context, "Scroll to move handle!", 18, Gravity.TOP);
-
-        mHalfCurtainHeight = (int) (mRefreshViewHeight * 0.5f);
-
-        RelativeLayout.LayoutParams topLp = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, mHalfCurtainHeight);
-        RelativeLayout.LayoutParams bottomLp = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, mHalfCurtainHeight);
-        bottomLp.topMargin = mHalfCurtainHeight;
-        mCurtainLayout.removeAllViews();
-        mCurtainLayout.addView(mTopMaskView, 0,topLp);
-        mCurtainLayout.addView(mBottomMaskView, 1, bottomLp);
     }
 
     /**
      * 两层布局：一个是阴影背景；一个是窗帘
      */
-    private void initMainLayout(Context context) {
+    private void initMainLayout(Context context, AttributeSet attrs) {
+
+        mHitBlockView = new HitBlockView(context, attrs);
+        mHitBlockView.setLayoutParams(new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        addView(mHitBlockView);
 
         mCurtainLayout = new RelativeLayout(context);
         mMaskShadowLayout = new RelativeLayout(context);
         mMaskShadowLayout.setBackgroundColor(Color.parseColor("#3A3A3A"));
 
         LayoutParams lp = new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-        lp.topMargin = (int) HitBlockView.DIVIDING_LINE_SIZE;
-        lp.bottomMargin = (int) HitBlockView.DIVIDING_LINE_SIZE;
+        lp.topMargin = HitBlockView.DIVIDING_LINE_SIZE;
+        lp.bottomMargin = HitBlockView.DIVIDING_LINE_SIZE;
 
         addView(mMaskShadowLayout, lp);
         addView(mCurtainLayout, lp);
@@ -101,10 +86,6 @@ public class RefreshHeaderView extends FrameLayout {
         maskTextView.setTextSize(textSize);
         maskTextView.setText(text);
         return maskTextView;
-    }
-
-    public float d2x(float size) {
-        return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, size, getContext().getResources().getDisplayMetrics());
     }
 
     public void startOpeningAnim(long delay) {
@@ -132,4 +113,19 @@ public class RefreshHeaderView extends FrameLayout {
         mStartOpeningAnim.start();
     }
 
+    @Override
+    public void onGlobalLayout() {
+        getViewTreeObserver().removeGlobalOnLayoutListener(this);
+
+        //* 2. 计算单个窗帘的高度
+        //* 3. 初始化窗帘并加入到布局中
+        mHalfCurtainHeight = (int) ((mHitBlockView.getHeight() - 2 * HitBlockView.DIVIDING_LINE_SIZE) * .5f);
+
+        RelativeLayout.LayoutParams topLp = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, mHalfCurtainHeight);
+        RelativeLayout.LayoutParams bottomLp = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, mHalfCurtainHeight);
+        bottomLp.topMargin = mHalfCurtainHeight;
+        mCurtainLayout.removeAllViews();
+        mCurtainLayout.addView(mTopMaskView, 0, topLp);
+        mCurtainLayout.addView(mBottomMaskView, 1, bottomLp);
+    }
 }

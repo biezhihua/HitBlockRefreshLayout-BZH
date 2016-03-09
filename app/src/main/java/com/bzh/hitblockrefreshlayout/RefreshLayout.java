@@ -14,6 +14,7 @@ import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.AbsListView;
 import android.widget.LinearLayout;
@@ -26,11 +27,11 @@ import android.widget.LinearLayout;
  * <b>描述</b>：　　　<br>
  * <b>版本</b>：　    V1.0 <br>
  * <b>修订历史</b>：　<br/>
- * <p/>
+ * <p>
  * 1. RefreshLayout布局内只能允许有一个孩子
  * ========================================================== <br>
  */
-public class RefreshLayout extends LinearLayout {
+public class RefreshLayout extends LinearLayout implements ViewTreeObserver.OnGlobalLayoutListener {
 
     private static final String TAG = "RefreshLayout";
 
@@ -78,10 +79,10 @@ public class RefreshLayout extends LinearLayout {
     private int mTouchStartY;
     private int mTouchCurrentY;
     private int mScrollPointerId;
-    private int mRefreshViewHeight;
     private int mCurrentStatus;
     private ValueAnimator mStartRollbackTopHeaderAnim;
     private ValueAnimator mStartRollbackHeaderAnim;
+    private int mRefreshViewHeight;
 
     public RefreshLayout(Context context) {
         this(context, null);
@@ -97,8 +98,8 @@ public class RefreshLayout extends LinearLayout {
             throw new RuntimeException("RefreshLayout View is only one child");
         }
         setOrientation(VERTICAL);
-        initAttrs(context, attrs);
         initHeaderView(context, attrs);
+        getViewTreeObserver().addOnGlobalLayoutListener(this);
     }
 
     @Override
@@ -107,21 +108,10 @@ public class RefreshLayout extends LinearLayout {
         initRefreshView();
     }
 
-    private void initAttrs(Context context, AttributeSet attrs) {
-        if (attrs != null) {
-            TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.RefreshLayout, 0, 0);
-            mRefreshViewHeight = (int) a.getDimension(R.styleable.RefreshLayout_RefreshViewHeight, d2x(DEFAULT_REFRESH_VIEW_HEIGHT));
-            a.recycle();
-        }
-    }
-
     private void initHeaderView(Context context, AttributeSet attrs) {
         mRefreshHeaderView = new RefreshHeaderView(context, attrs);
         addView(mRefreshHeaderView, 0);
 
-        mRefreshHeaderViewLayoutParams = (MarginLayoutParams) mRefreshHeaderView.getLayoutParams();
-        mRefreshHeaderViewLayoutParams.topMargin = -mRefreshViewHeight;
-        mRefreshHeaderView.setLayoutParams(mRefreshHeaderViewLayoutParams);
     }
 
 
@@ -286,8 +276,12 @@ public class RefreshLayout extends LinearLayout {
         return null;
     }
 
-    private float d2x(float size) {
-        return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, size, getContext().getResources().getDisplayMetrics());
+    @Override
+    public void onGlobalLayout() {
+        getViewTreeObserver().removeGlobalOnLayoutListener(this);
+        mRefreshViewHeight = mRefreshHeaderView.getHeight();
+        mRefreshHeaderViewLayoutParams = (MarginLayoutParams) mRefreshHeaderView.getLayoutParams();
+        mRefreshHeaderViewLayoutParams.topMargin = -mRefreshViewHeight;
+        mRefreshHeaderView.setLayoutParams(mRefreshHeaderViewLayoutParams);
     }
-
 }

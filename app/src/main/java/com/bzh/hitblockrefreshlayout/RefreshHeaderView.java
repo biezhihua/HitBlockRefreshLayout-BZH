@@ -66,13 +66,13 @@ public class RefreshHeaderView extends FrameLayout {
         mTopMaskView = getMaskTextView(context, "Pull to Break Out!", 20, Gravity.BOTTOM);
         mBottomMaskView = getMaskTextView(context, "Scroll to move handle!", 18, Gravity.TOP);
 
-        mHalfCurtainHeight = (int) (getHeight() * 0.5f);
+        mHalfCurtainHeight = (int) (mRefreshViewHeight * 0.5f);
 
         RelativeLayout.LayoutParams topLp = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, mHalfCurtainHeight);
         RelativeLayout.LayoutParams bottomLp = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, mHalfCurtainHeight);
         bottomLp.topMargin = mHalfCurtainHeight;
         mCurtainLayout.removeAllViews();
-        mCurtainLayout.addView(mTopMaskView, 0, topLp);
+        mCurtainLayout.addView(mTopMaskView, 0,topLp);
         mCurtainLayout.addView(mBottomMaskView, 1, bottomLp);
     }
 
@@ -109,8 +109,8 @@ public class RefreshHeaderView extends FrameLayout {
 
     public void startOpeningAnim(long delay) {
         if (mStartOpeningAnim == null) {
-            ObjectAnimator topMaskAnim = ObjectAnimator.ofFloat(mTopMaskView, "transitionY", mTopMaskView.getTranslationY(), -mHalfCurtainHeight);
-            ObjectAnimator bottomMaskAnim = ObjectAnimator.ofFloat(mBottomMaskView, "transitionY", mBottomMaskView.getTranslationY(), mHalfCurtainHeight);
+            ObjectAnimator topMaskAnim = ObjectAnimator.ofFloat(mTopMaskView, "translationY", mTopMaskView.getTranslationY(), -mHalfCurtainHeight);
+            ObjectAnimator bottomMaskAnim = ObjectAnimator.ofFloat(mBottomMaskView, "translationY", mBottomMaskView.getTranslationY(), mHalfCurtainHeight);
             ObjectAnimator maskShadowAnim = ObjectAnimator.ofFloat(mMaskShadowLayout, "alpha", mMaskShadowLayout.getAlpha(), 0);
 
             mStartOpeningAnim = new AnimatorSet();

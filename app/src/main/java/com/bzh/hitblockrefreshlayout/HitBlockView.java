@@ -227,8 +227,141 @@ public class HitBlockView extends View {
         drawColorBlock(canvas);
 
         drawRacket(canvas);
+
+        if (mGameStatus >= GAME_STATUS_PLAY && mGameStatus <= GAME_STATUS_FINISHED) {
+            makeBallPath(canvas);
+        }
+
+        drawText(canvas);
     }
 
+    private void makeBallPath(Canvas canvas) {
+        mPaint.setColor(mBallColor);
+
+        // 小球进入到色块区域
+        if (mCx <= mBlockLeft + mBlockHorizontalNum * BLOCK_WIDTH + (mBlockHorizontalNum - 1) * DIVIDING_LINE_SIZE + BALL_RADIUS) {
+            // 反弹回来
+            if (checkTouchBlock(mCx, mCy)) {
+                mIsleft = false;
+            }
+        }
+
+        // 小球穿过色块区域
+        if (mCx <= mBlockLeft + BALL_RADIUS) {
+            mIsleft = false;
+        }
+
+        //小球当前坐标X值在挡板X值区域范围内
+        if (mCx + BALL_RADIUS >= mRacketLeft && mCx - BALL_RADIUS < mRacketLeft + BLOCK_WIDTH) {
+            // 小球与挡板接触
+            if (checkTouchRacket(mCy)) {
+                if (mPointList.size() == mBlockHorizontalNum * BLOCK_VERTICAL_NUM) { // 矩形块全部被消灭，游戏结束
+                    mGameStatus = GAME_STATUS_OVER;
+                    return;
+                }
+                mIsleft = true;
+            }
+        } else if (mCx > canvas.getWidth()) { // 小球超出挡板区域
+            mGameStatus = GAME_STATUS_OVER;
+        }
+
+
+        if (mCy <= BALL_RADIUS + DIVIDING_LINE_SIZE) {
+            // 小球撞到上边界
+            mAngle = 180 - DEFAULT_ANGLE;
+        } else if (mCy >= getHeight() - BALL_RADIUS - DIVIDING_LINE_SIZE) {
+            mAngle = 180 + DEFAULT_ANGLE;
+        }
+
+        if (mIsleft) {
+            mCx -= mSpeed;
+        } else {
+            mCx += mSpeed;
+        }
+
+        mCy -= (float) Math.tan(Math.toRadians(mAngle)) * mSpeed;
+
+        canvas.drawCircle(mCx, mCy, BALL_RADIUS, mPaint);
+
+        invalidate();
+
+    }
+
+    /**
+     * 检测小球是否撞击到挡板
+     *
+     * @param y
+     * @return
+     */
+    private boolean checkTouchRacket(float y) {
+        boolean flag = false;
+        float diffVal = y - mRacketTop;
+        if (diffVal >= 0 && diffVal <= mRacketHeight) { // 小球位于挡板Y值区域范围内
+            flag = true;
+        }
+        return flag;
+    }
+
+    /**
+     * 检测小球是否撞击到矩形块
+     *
+     * @param x 小球坐标x
+     * @param y 小球坐标y
+     * @return
+     */
+    Point p = new Point();
+
+    private boolean checkTouchBlock(float x, float y) {
+        int columnX = (int) ((x - mBlockLeft - BALL_RADIUS - mSpeed) / BLOCK_WIDTH);
+        columnX = columnX == mBlockHorizontalNum ? columnX - 1 : columnX;
+        int rowY = (int) (y / BLOCK_HEIGHT);
+        rowY = rowY == BLOCK_VERTICAL_NUM ? rowY - 1 : rowY;
+        p.set(columnX, rowY);
+
+        boolean flag = false;
+
+        for (Point point : mPointList) {
+            if (point.equals(p.x, p.y)) {
+                flag = true;
+                break;
+            }
+        }
+
+        if (!flag) {
+            mPointList.add(p);
+        }
+
+        return !flag;
+    }
+
+
+    /**
+     * 绘制文字
+     */
+    private void drawText(Canvas canvas) {
+        switch (mGameStatus) {
+            case GAME_STATUS_PLAY:
+            case GAME_STATUS_PREPARE: {
+                mTextPaint.setTextSize(60);
+                promptText(canvas, TEXT_LOADING);
+            }
+            break;
+            case GAME_STATUS_FINISHED:
+                mTextPaint.setTextSize(50);
+                promptText(canvas, TEXT_LOADING_FINISHED);
+                break;
+            case GAME_STATUS_OVER:
+                mTextPaint.setTextSize(60);
+                promptText(canvas, TEXT_GAME_OVER);
+                break;
+        }
+    }
+
+    private void promptText(Canvas canvas, String text) {
+        float textX = (canvas.getWidth() - mTextPaint.measureText(text)) * .5f;
+        float textY = canvas.getHeight() * .5f - (mTextPaint.ascent() + mTextPaint.descent()) * .5f;
+        canvas.drawText(text, textX, textY, mTextPaint);
+    }
 
     /**
      * 绘制挡板
@@ -236,7 +369,8 @@ public class HitBlockView extends View {
      * @param canvas
      */
     private void drawRacket(Canvas canvas) {
-
+        mPaint.setColor(mRacketColor);
+        canvas.drawRect(mRacketLeft, mRacketTop, mRacketLeft + BLOCK_WIDTH, mRacketTop + mRacketHeight, mPaint);
     }
 
     private void drawColorBlock(Canvas canvas) {

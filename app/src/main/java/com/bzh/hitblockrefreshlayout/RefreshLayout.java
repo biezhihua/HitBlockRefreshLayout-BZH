@@ -4,13 +4,10 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.content.Context;
-import android.content.res.TypedArray;
 import android.support.v4.view.MotionEventCompat;
 import android.support.v4.view.ViewCompat;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
-import android.util.Log;
-import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -80,6 +77,7 @@ public class RefreshLayout extends LinearLayout implements ViewTreeObserver.OnGl
     private int mTouchCurrentY;
     private int mScrollPointerId;
     private int mCurrentStatus;
+    private boolean mIsRefreshViewShowing;
     private ValueAnimator mStartRollbackTopHeaderAnim;
     private ValueAnimator mStartRollbackHeaderAnim;
     private int mRefreshViewHeight;
@@ -134,7 +132,6 @@ public class RefreshLayout extends LinearLayout implements ViewTreeObserver.OnGl
                 final int pointerIndex = MotionEventCompat.findPointerIndex(ev, mScrollPointerId);
                 float currentY = MotionEventCompat.getY(ev, pointerIndex) + 0.5f;
                 int dy = (int) currentY - mTouchStartY;
-                Log.d(TAG, "onInterceptTouchEvent() called with: currentY  = [" + currentY + "] mTouchStartY = [" + mTouchStartY + "]" + "dy = [" + dy + "] !canChildScrollVerticallyUp()= [" + !canChildScrollVerticallyUp() + "]");
                 if (!canChildScrollVerticallyUp() && dy > 0) {
                     return true;
                 }
@@ -152,6 +149,11 @@ public class RefreshLayout extends LinearLayout implements ViewTreeObserver.OnGl
         int actionMasked = MotionEventCompat.getActionMasked(event);
 
         switch (actionMasked) {
+            case MotionEvent.ACTION_DOWN:
+                if (mCurrentStatus == STATUS_REFRESHING) {
+                    mCurrentStatus = STATUS_AGAIN_DOWN;
+                }
+                break;
             case MotionEvent.ACTION_MOVE:
                 final int pointerIndex = MotionEventCompat.findPointerIndex(event, mScrollPointerId);
                 mTouchCurrentY = (int) (MotionEventCompat.getY(event, pointerIndex) + 0.5f);
@@ -165,7 +167,12 @@ public class RefreshLayout extends LinearLayout implements ViewTreeObserver.OnGl
                     mCurrentStatus = STATUS_PULL_TO_REFRESH;
                 }
 
-                mRefreshHeaderViewLayoutParams.topMargin = (int) (offsetY - mRefreshViewHeight);
+                if (mIsRefreshViewShowing) {
+                    mRefreshHeaderViewLayoutParams.topMargin = (int) (offsetY);
+                } else {
+                    mRefreshHeaderViewLayoutParams.topMargin = (int) (offsetY - mRefreshViewHeight);
+                }
+
                 mRefreshHeaderView.setLayoutParams(mRefreshHeaderViewLayoutParams);
 
                 return true;
@@ -200,6 +207,7 @@ public class RefreshLayout extends LinearLayout implements ViewTreeObserver.OnGl
                 public void onAnimationEnd(Animator animation) {
                     super.onAnimationEnd(animation);
                     mCurrentStatus = STATUS_REFRESH_FINISHED;
+                    mIsRefreshViewShowing = true;
                     mRefreshHeaderView.startOpeningAnim(0);
                 }
             });
@@ -228,6 +236,7 @@ public class RefreshLayout extends LinearLayout implements ViewTreeObserver.OnGl
                 public void onAnimationEnd(Animator animation) {
                     super.onAnimationEnd(animation);
                     mCurrentStatus = STATUS_REFRESH_FINISHED;
+                    mIsRefreshViewShowing = false;
                 }
             });
         } else if (mStartRollbackTopHeaderAnim.isRunning()) {

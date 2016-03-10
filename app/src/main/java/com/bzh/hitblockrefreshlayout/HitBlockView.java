@@ -225,6 +225,18 @@ public class HitBlockView extends View {
         drawBoundary(canvas);
 
         drawColorBlock(canvas);
+
+        drawRacket(canvas);
+    }
+
+
+    /**
+     * 绘制挡板
+     *
+     * @param canvas
+     */
+    private void drawRacket(Canvas canvas) {
+
     }
 
     private void drawColorBlock(Canvas canvas) {
@@ -245,10 +257,9 @@ public class HitBlockView extends View {
                 continue;
             }
 
-            redCode = (Color.red(mBlockColor) ) * column;
-            greenCode = (Color.green(mBlockColor) ) * column;
-            blueCode = (Color.blue(mBlockColor) ) * column;
-            Log.d(TAG, "drawColorBlock() called with: " + "redCode = [" + redCode + "]" + "greenCode = [" + greenCode + "]" + "blueCode = [" + blueCode + "]");
+            redCode = (Color.red(mBlockColor) / mBlockHorizontalNum) * column;
+            greenCode = (Color.green(mBlockColor) / mBlockHorizontalNum) * column;
+            blueCode = (Color.blue(mBlockColor) / mBlockHorizontalNum) * column;
             mBlockPaint.setColor(Color.rgb(redCode, greenCode, blueCode));
 
             left = mBlockLeft + column * (BLOCK_WIDTH + DIVIDING_LINE_SIZE);

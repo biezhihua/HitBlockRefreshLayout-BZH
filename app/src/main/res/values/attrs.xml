@@ -1,8 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <declare-styleable name="RefreshLayout">
-        <attr name="RefreshViewColor" format="color"/>                          <!-- The arc color -->
-        <attr name="RefreshViewMaxHeight" format="float"/>                          <!-- The arc color -->
-        <attr name="RefreshViewHeight" format="float"/>                          <!-- The arc color -->
+        <attr name="block_horizontal_num" format="integer"/>
+        <attr name="ball_speed" format="integer">
+            <enum name="low" value="3"/>
+            <enum name="medium" value="6"/>
+            <enum name="fast" value="9"/>
+        </attr>
+        <attr name="block_color" format="color"/>
+        <attr name="ball_color" format="color"/>
+        <attr name="racket_color" format="color"/>
     </declare-styleable>
+
 </resources>

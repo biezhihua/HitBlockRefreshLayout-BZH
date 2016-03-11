@@ -232,6 +232,8 @@ public class HitBlockView extends View {
             makeBallPath(canvas);
         }
 
+
+
         drawText(canvas);
     }
 

@@ -29,6 +29,7 @@ import android.widget.TextView;
  */
 public class RefreshHeaderView extends FrameLayout implements ViewTreeObserver.OnGlobalLayoutListener {
 
+
     private static final long OPENING_ANIM_DURATION = 500;
     private RelativeLayout mMaskShadowLayout;     // 灰色背景
     private RelativeLayout mCurtainLayout;  // 窗帘

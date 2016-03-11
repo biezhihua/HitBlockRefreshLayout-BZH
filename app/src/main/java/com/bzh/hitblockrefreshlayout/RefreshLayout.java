@@ -213,6 +213,7 @@ public class RefreshLayout extends LinearLayout implements ViewTreeObserver.OnGl
             });
         } else if (mStartRollbackHeaderAnim.isRunning()) {
             mStartRollbackHeaderAnim.cancel();
+
         }
         mStartRollbackHeaderAnim.setFloatValues(mRefreshHeaderViewLayoutParams.topMargin, 0);
         mStartRollbackHeaderAnim.start();

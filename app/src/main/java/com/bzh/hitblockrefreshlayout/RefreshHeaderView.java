@@ -106,6 +106,7 @@ public class RefreshHeaderView extends FrameLayout implements ViewTreeObserver.O
                     mTopMaskView.setVisibility(View.GONE);
                     mBottomMaskView.setVisibility(View.GONE);
                     mMaskShadowLayout.setVisibility(View.GONE);
+                    mHitBlockView.setGameStatus(HitBlockView.GAME_STATUS_PLAY);
                 }
             });
         } else if (mStartOpeningAnim.isRunning()) {
@@ -113,6 +114,7 @@ public class RefreshHeaderView extends FrameLayout implements ViewTreeObserver.O
         }
         mStartOpeningAnim.start();
     }
+
 
     @Override
     public void onGlobalLayout() {
@@ -128,5 +130,25 @@ public class RefreshHeaderView extends FrameLayout implements ViewTreeObserver.O
         mCurtainLayout.removeAllViews();
         mCurtainLayout.addView(mTopMaskView, 0, topLp);
         mCurtainLayout.addView(mBottomMaskView, 1, bottomLp);
+    }
+
+    public void moveRacket(float offsetY) {
+        mHitBlockView.moveRacket(offsetY);
+    }
+
+    public void end() {
+        mHitBlockView.setGameStatus(HitBlockView.GAME_STATUS_PREPARE);
+
+        mTopMaskView.setTranslationY(mTopMaskView.getTranslationY() + mHalfCurtainHeight);
+        mBottomMaskView.setTranslationY(mBottomMaskView.getTranslationY() - mHalfCurtainHeight);
+        mMaskShadowLayout.setAlpha(1.0f);
+
+        mTopMaskView.setVisibility(View.VISIBLE);
+        mBottomMaskView.setVisibility(View.VISIBLE);
+        mMaskShadowLayout.setVisibility(View.VISIBLE);
+    }
+
+    public void complete() {
+        mHitBlockView.setGameStatus(HitBlockView.GAME_STATUS_FINISHED);
     }
 }

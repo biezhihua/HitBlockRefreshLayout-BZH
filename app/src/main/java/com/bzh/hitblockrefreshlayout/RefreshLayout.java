@@ -8,6 +8,7 @@ import android.support.v4.view.MotionEventCompat;
 import android.support.v4.view.ViewCompat;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -127,6 +128,9 @@ public class RefreshLayout extends LinearLayout implements ViewTreeObserver.OnGl
             case MotionEvent.ACTION_DOWN:
                 mScrollPointerId = MotionEventCompat.getPointerId(ev, 0);
                 mTouchCurrentY = mTouchStartY = (int) (MotionEventCompat.getY(ev, actionIndex) + 0.5f);
+                if (mCurrentStatus == STATUS_REFRESHING) {
+                    mCurrentStatus = STATUS_AGAIN_DOWN;
+                }
                 break;
             case MotionEvent.ACTION_MOVE:
                 final int pointerIndex = MotionEventCompat.findPointerIndex(ev, mScrollPointerId);
@@ -146,14 +150,15 @@ public class RefreshLayout extends LinearLayout implements ViewTreeObserver.OnGl
             return super.onTouchEvent(event);
         }
 
+        if (mCurrentStatus == STATUS_AGAIN_DOWN) {
+            Log.d(TAG, "onTouchEvent() called with: " + "event = [" + event + "]");
+            return handleAgainDownAction(event);
+        }
+
         int actionMasked = MotionEventCompat.getActionMasked(event);
 
         switch (actionMasked) {
-            case MotionEvent.ACTION_DOWN:
-                if (mCurrentStatus == STATUS_REFRESHING) {
-                    mCurrentStatus = STATUS_AGAIN_DOWN;
-                }
-                break;
+
             case MotionEvent.ACTION_MOVE:
                 final int pointerIndex = MotionEventCompat.findPointerIndex(event, mScrollPointerId);
                 mTouchCurrentY = (int) (MotionEventCompat.getY(event, pointerIndex) + 0.5f);
@@ -189,6 +194,25 @@ public class RefreshLayout extends LinearLayout implements ViewTreeObserver.OnGl
         return super.onTouchEvent(event);
     }
 
+    private boolean handleAgainDownAction(MotionEvent event) {
+        int actionMasked = MotionEventCompat.getActionMasked(event);
+        switch (actionMasked) {
+            case MotionEvent.ACTION_MOVE:
+                final int pointerIndex = MotionEventCompat.findPointerIndex(event, mScrollPointerId);
+                mTouchCurrentY = (int) (MotionEventCompat.getY(event, pointerIndex) + 0.5f);
+                final float distance = mTouchCurrentY - mTouchStartY;
+                final float offsetY = distance * STICK_RATIO;
+                mRefreshHeaderView.moveRacket(offsetY);
+                mRefreshHeaderViewLayoutParams.topMargin = (int) (offsetY);
+                mRefreshHeaderView.setLayoutParams(mRefreshHeaderViewLayoutParams);
+                break;
+            case MotionEvent.ACTION_UP:
+                startRollbackTopHeaderAnim();
+                break;
+        }
+        return true;
+    }
+
     private void startRollbackHeaderAnim() {
         if (mStartRollbackHeaderAnim == null) {
             mStartRollbackHeaderAnim = ValueAnimator.ofFloat(0);
@@ -206,7 +230,7 @@ public class RefreshLayout extends LinearLayout implements ViewTreeObserver.OnGl
                 @Override
                 public void onAnimationEnd(Animator animation) {
                     super.onAnimationEnd(animation);
-                    mCurrentStatus = STATUS_REFRESH_FINISHED;
+                    mCurrentStatus = STATUS_REFRESHING;
                     mIsRefreshViewShowing = true;
                     mRefreshHeaderView.startOpeningAnim(0);
                 }
@@ -238,6 +262,7 @@ public class RefreshLayout extends LinearLayout implements ViewTreeObserver.OnGl
                     super.onAnimationEnd(animation);
                     mCurrentStatus = STATUS_REFRESH_FINISHED;
                     mIsRefreshViewShowing = false;
+                    mRefreshHeaderView.end();
                 }
             });
         } else if (mStartRollbackTopHeaderAnim.isRunning()) {
@@ -293,5 +318,12 @@ public class RefreshLayout extends LinearLayout implements ViewTreeObserver.OnGl
         mRefreshHeaderViewLayoutParams = (MarginLayoutParams) mRefreshHeaderView.getLayoutParams();
         mRefreshHeaderViewLayoutParams.topMargin = -mRefreshViewHeight;
         mRefreshHeaderView.setLayoutParams(mRefreshHeaderViewLayoutParams);
+    }
+
+    public void finishRefresing() {
+        mRefreshHeaderView.complete();
+        if (mCurrentStatus != STATUS_AGAIN_DOWN) {
+            startRollbackTopHeaderAnim();
+        }
     }
 }

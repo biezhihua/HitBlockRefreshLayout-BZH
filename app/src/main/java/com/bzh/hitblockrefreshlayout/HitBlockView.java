@@ -233,7 +233,6 @@ public class HitBlockView extends View {
         }
 
 
-
         drawText(canvas);
     }
 
@@ -408,5 +407,26 @@ public class HitBlockView extends View {
         mPaint.setColor(Color.parseColor("#606060"));
         canvas.drawLine(0, 0, mScreenWidth, 0, mPaint);
         canvas.drawLine(0, getHeight(), mScreenWidth, getHeight(), mPaint);
+    }
+
+    /**
+     * 挡板上下移动
+     *
+     * @param offsetY
+     */
+    public void moveRacket(float offsetY) {
+        float maxDistance = (getHeight() - 2 * DIVIDING_LINE_SIZE - mRacketHeight);
+
+        if (offsetY > maxDistance) {
+            offsetY = maxDistance;
+        }
+
+        mRacketTop = offsetY;
+        postInvalidate();
+    }
+
+    public void setGameStatus(int gameStatus) {
+        this.mGameStatus = gameStatus;
+        postInvalidate();
     }
 }

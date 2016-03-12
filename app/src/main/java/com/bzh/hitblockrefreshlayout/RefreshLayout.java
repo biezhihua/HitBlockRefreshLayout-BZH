@@ -260,6 +260,10 @@ public class RefreshLayout extends LinearLayout implements ViewTreeObserver.OnGl
                 @Override
                 public void onAnimationEnd(Animator animation) {
                     super.onAnimationEnd(animation);
+                    if (mCurrentStatus == STATUS_PULL_TO_REFRESH || mCurrentStatus == STATUS_REFRESH_FINISHED) {
+                        mCurrentStatus = STATUS_REFRESH_FINISHED;
+                        return;
+                    }
                     mCurrentStatus = STATUS_REFRESH_FINISHED;
                     mIsRefreshViewShowing = false;
                     mRefreshHeaderView.end();

@@ -64,6 +64,7 @@ public class RefreshHeaderView extends FrameLayout implements ViewTreeObserver.O
     private void initMainLayout(Context context, AttributeSet attrs) {
 
         mHitBlockView = new HitBlockView(context, attrs);
+        mHitBlockView.setGameStatus(HitBlockView.GAME_STATUS_PREPARE);
         mHitBlockView.setLayoutParams(new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         addView(mHitBlockView);
 
